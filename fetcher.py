@@ -48,7 +48,16 @@ def fetch_all_videos(
         if not info:
             return
 
-        entries = info.get("entries") or []
+        # YouTube channels return tabs (Videos, Shorts, Live) as nested playlists.
+        # Flatten one level so we get actual video entries.
+        raw_entries = info.get("entries") or []
+        entries = []
+        for e in raw_entries:
+            if e and e.get("_type") == "playlist":
+                entries.extend(e.get("entries") or [])
+            else:
+                entries.append(e)
+
         total = len(entries)
 
         for i, entry in enumerate(entries):
@@ -56,7 +65,8 @@ def fetch_all_videos(
                 continue
 
             video_id = entry.get("id")
-            if not video_id or video_id in existing_ids:
+            # YouTube video IDs are exactly 11 chars; skip channel/playlist IDs
+            if not video_id or len(video_id) != 11 or video_id in existing_ids:
                 if progress_callback:
                     progress_callback(i + 1, total)
                 continue
