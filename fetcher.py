@@ -8,6 +8,8 @@ def _make_ydl_opts(quiet: bool = True) -> dict:
         "no_warnings": quiet,
         "extract_flat": "in_playlist",  # fast: metadata only, no page per video
         "ignoreerrors": True,
+        "sleep_interval": 1,
+        "max_sleep_interval": 3,
     }
 
 
