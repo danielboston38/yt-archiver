@@ -168,28 +168,46 @@ def get_video_count(channel_id: str = None):
         return row[0]
 
 
-def search_videos(query: str, channel_id: str = None, limit: int = 20):
-    """Full-text search across title, description, and tags."""
+def search_videos(query: str = None, channel_id: str = None, limit: int = 20, year: str = None):
+    """Full-text search across title, description, and tags. Optionally filter by year."""
     with get_connection() as conn:
+        # Year-only: simple date filter, no FTS
+        if not query and year:
+            if channel_id:
+                return conn.execute("""
+                    SELECT * FROM videos
+                    WHERE upload_date LIKE ? AND channel_id = ?
+                    ORDER BY upload_date ASC
+                    LIMIT ?
+                """, (f"{year}%", channel_id, limit)).fetchall()
+            else:
+                return conn.execute("""
+                    SELECT * FROM videos
+                    WHERE upload_date LIKE ?
+                    ORDER BY upload_date ASC
+                    LIMIT ?
+                """, (f"{year}%", limit)).fetchall()
+
+        # FTS with optional year filter
+        year_clause = f"AND v.upload_date LIKE '{year}%'" if year else ""
         if channel_id:
-            rows = conn.execute("""
+            return conn.execute(f"""
                 SELECT v.*, rank
                 FROM videos_fts
                 JOIN videos v ON v.rowid = videos_fts.rowid
-                WHERE videos_fts MATCH ? AND v.channel_id = ?
+                WHERE videos_fts MATCH ? AND v.channel_id = ? {year_clause}
                 ORDER BY rank
                 LIMIT ?
             """, (query, channel_id, limit)).fetchall()
         else:
-            rows = conn.execute("""
+            return conn.execute(f"""
                 SELECT v.*, rank
                 FROM videos_fts
                 JOIN videos v ON v.rowid = videos_fts.rowid
-                WHERE videos_fts MATCH ?
+                WHERE videos_fts MATCH ? {year_clause}
                 ORDER BY rank
                 LIMIT ?
             """, (query, limit)).fetchall()
-        return rows
 
 
 def list_videos(channel_id: str = None, limit: int = 50, offset: int = 0,

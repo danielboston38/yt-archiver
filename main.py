@@ -150,13 +150,32 @@ def _sync_channel(channel_id: str, channel_url: str):
     )
 
 
-def cmd_search(query: str, limit: int = 20):
+def cmd_search(terms: list, limit: int = 20):
+    import re
     db.init_db()
-    rows = db.search_videos(query, limit=limit)
-    if not rows:
-        console.print(f"[yellow]No results for[/yellow] [bold]{query!r}[/bold]")
+
+    year = None
+    query_parts = []
+    for term in terms:
+        if re.match(r'^\d{4}$', term) and 2000 <= int(term) <= 2099:
+            year = term
+        else:
+            query_parts.append(term)
+    query = " ".join(query_parts) or None
+
+    if not query and not year:
+        console.print("[yellow]Provide a search query, a year, or both.[/yellow]")
         return
-    console.print(video_table(rows, title=f'Search: "{query}" — {len(rows)} result(s)'))
+
+    rows = db.search_videos(query=query, year=year, limit=limit)
+
+    if not rows:
+        label = " ".join(filter(None, [f'"{query}"' if query else None, year]))
+        console.print(f"[yellow]No results for[/yellow] [bold]{label}[/bold]")
+        return
+
+    label = " ".join(filter(None, [f'"{query}"' if query else None, year]))
+    console.print(video_table(rows, title=f"Search: {label} — {len(rows)} result(s)"))
 
 
 def cmd_list(sort: str = "upload_date", limit: int = 50, offset: int = 0):
@@ -286,8 +305,8 @@ def main():
     p_sync = sub.add_parser("sync", help="Sync new videos (all channels if no URL given)")
     p_sync.add_argument("channel_url", nargs="?", default=None)
 
-    p_search = sub.add_parser("search", help="Full-text search")
-    p_search.add_argument("query")
+    p_search = sub.add_parser("search", help="Full-text search — query, year, or both")
+    p_search.add_argument("terms", nargs="+", help="Search query and/or a 4-digit year")
     p_search.add_argument("--limit", type=int, default=20)
 
     p_list = sub.add_parser("list", help="List archived videos")
@@ -318,7 +337,7 @@ def main():
     elif args.command == "sync":
         cmd_sync(args.channel_url)
     elif args.command == "search":
-        cmd_search(args.query, limit=args.limit)
+        cmd_search(args.terms, limit=args.limit)
     elif args.command == "list":
         cmd_list(sort=args.sort, limit=args.limit, offset=args.offset)
     elif args.command == "channels":
