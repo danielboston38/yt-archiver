@@ -7,6 +7,7 @@ A command-line tool that fetches and archives video metadata from YouTube channe
 - Archive all video metadata from any YouTube channel (title, description, upload date, duration, view count, tags)
 - Full-text search across titles and descriptions
 - Fast incremental syncing — only fetches new videos on subsequent runs
+- Automatic detection of multi-part series (e.g. "Restoration Part 1", "Part 2", …)
 - No API key required
 - Stores everything locally in a SQLite database
 
@@ -80,6 +81,18 @@ Run this periodically to pick up new uploads without re-fetching everything.
 ```bash
 python main.py channels
 ```
+
+### Browse multi-part series
+
+```bash
+# List all detected series
+python main.py series
+
+# Show all parts of a specific series
+python main.py series "Mac IIci Restoration"
+```
+
+Series are detected automatically from video titles using the pattern `Part N` (e.g. "Part 1", "Part 2"). This detection is tuned for channels like Adrian's Digital Basement that consistently use this naming convention. If you archive a channel that uses different conventions (e.g. "Ep. 1", "#1", "Episode 1"), you'll need to extend the `_SERIES_RE` regex in `db.py` to match that channel's pattern.
 
 ## Data
 

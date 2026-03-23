@@ -9,6 +9,8 @@ Usage:
   python main.py list [--sort <field>]   List videos (most recent first)
   python main.py channels                Show all archived channels
   python main.py info <video_id_or_url>  Show full details for a single video
+  python main.py series                  List detected multi-part series
+  python main.py series <name>           Show all parts of a specific series
 """
 
 import argparse
@@ -192,6 +194,33 @@ def cmd_channels():
     console.print(table)
 
 
+def cmd_series(name: str = None):
+    db.init_db()
+    if name:
+        rows = db.get_series_videos(name)
+        if not rows:
+            console.print(f"[yellow]No series found matching[/yellow] [bold]{name!r}[/bold]")
+            return
+        console.print(video_table(rows, title=f'Series: "{name}" — {len(rows)} part(s)'))
+    else:
+        series_list = db.get_series()
+        if not series_list:
+            console.print("[yellow]No multi-part series detected yet.[/yellow]")
+            return
+        table = Table(title="Detected Series", highlight=True)
+        table.add_column("Series", style="bold", no_wrap=False, max_width=50)
+        table.add_column("Parts", justify="right", width=7)
+        table.add_column("First Upload", style="dim", width=12)
+        for s in series_list:
+            parts_str = (
+                f"{s['part_count']}"
+                if s['first_part'] == s['last_part']
+                else f"{s['part_count']} (pt {s['first_part']}–{s['last_part']})"
+            )
+            table.add_row(s["series_name"], parts_str, s["first_date"] or "—")
+        console.print(table)
+
+
 def cmd_info(video_ref: str):
     db.init_db()
     # Accept full URL or bare video ID
@@ -249,6 +278,10 @@ def main():
     p_info = sub.add_parser("info", help="Show full details for a video")
     p_info.add_argument("video_ref", help="Video ID or YouTube URL")
 
+    p_series = sub.add_parser("series", help="List detected multi-part series")
+    p_series.add_argument("name", nargs="?", default=None,
+                          help="Series name to show all parts (omit to list all series)")
+
     args = parser.parse_args()
 
     if args.command == "add":
@@ -263,6 +296,8 @@ def main():
         cmd_channels()
     elif args.command == "info":
         cmd_info(args.video_ref)
+    elif args.command == "series":
+        cmd_series(args.name)
 
 
 if __name__ == "__main__":
