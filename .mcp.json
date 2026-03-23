@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "jetbrains": {
+      "command": "/Applications/PyCharm.app/Contents/jbr/Contents/Home/bin/java",
+      "args": [
+        "-classpath",
+        "/Applications/PyCharm.app/Contents/plugins/mcpserver/lib/mcpserver-frontend.jar:/Applications/PyCharm.app/Contents/lib/util-8.jar:/Applications/PyCharm.app/Contents/lib/module-intellij.libraries.ktor.client.cio.jar:/Applications/PyCharm.app/Contents/lib/module-intellij.libraries.ktor.client.jar:/Applications/PyCharm.app/Contents/lib/module-intellij.libraries.ktor.network.tls.jar:/Applications/PyCharm.app/Contents/lib/module-intellij.libraries.ktor.io.jar:/Applications/PyCharm.app/Contents/lib/module-intellij.libraries.ktor.utils.jar:/Applications/PyCharm.app/Contents/lib/module-intellij.libraries.kotlinx.io.jar:/Applications/PyCharm.app/Contents/lib/module-intellij.libraries.kotlinx.serialization.core.jar:/Applications/PyCharm.app/Contents/lib/module-intellij.libraries.kotlinx.serialization.json.jar",
+        "com.intellij.mcpserver.stdio.McpStdioRunnerKt"
+      ],
+      "env": {
+        "IJ_MCP_SERVER_PORT": "64342"
+      }
+    },
+    "jetbrains-sse": {
+      "url": "http://localhost:64342/sse",
+      "type": "sse"
+    }
+  }
+}
