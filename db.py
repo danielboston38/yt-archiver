@@ -126,8 +126,8 @@ def upsert_video(video: dict):
                 view_count=excluded.view_count,
                 like_count=excluded.like_count,
                 tags=excluded.tags,
-                series_name=excluded.series_name,
-                series_part=excluded.series_part
+                series_name=COALESCE(excluded.series_name, series_name),
+                series_part=COALESCE(excluded.series_part, series_part)
         """, (
             video["id"],
             video["channel_id"],
@@ -252,6 +252,32 @@ def get_series_videos(series_name: str, channel_id: str = None):
                 WHERE series_name = ?
                 ORDER BY series_part ASC
             """, (series_name,)).fetchall()
+
+
+def find_videos_by_title_match(match: str, channel_id: str = None):
+    """Return videos whose title contains `match` (case-insensitive), ordered by upload_date."""
+    pattern = f"%{match}%"
+    with get_connection() as conn:
+        if channel_id:
+            return conn.execute(
+                "SELECT * FROM videos WHERE title LIKE ? AND channel_id = ? ORDER BY upload_date ASC",
+                (pattern, channel_id),
+            ).fetchall()
+        else:
+            return conn.execute(
+                "SELECT * FROM videos WHERE title LIKE ? ORDER BY upload_date ASC",
+                (pattern,),
+            ).fetchall()
+
+
+def tag_series(series_name: str, video_ids: list):
+    """Assign series_name and sequential part numbers (oldest first) to the given videos."""
+    with get_connection() as conn:
+        for part, vid_id in enumerate(video_ids, start=1):
+            conn.execute(
+                "UPDATE videos SET series_name=?, series_part=? WHERE id=?",
+                (series_name, part, vid_id),
+            )
 
 
 def get_existing_video_ids(channel_id: str) -> set:

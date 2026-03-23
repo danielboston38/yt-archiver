@@ -11,6 +11,7 @@ Usage:
   python main.py info <video_id_or_url>  Show full details for a single video
   python main.py series                  List detected multi-part series
   python main.py series <name>           Show all parts of a specific series
+  python main.py tag-series <name> --match <text>  Manually tag videos as a series
 """
 
 import argparse
@@ -221,6 +222,28 @@ def cmd_series(name: str = None):
         console.print(table)
 
 
+def cmd_tag_series(series_name: str, match: str, channel_id: str = None):
+    db.init_db()
+    rows = db.find_videos_by_title_match(match, channel_id=channel_id)
+    if not rows:
+        console.print(f"[yellow]No videos found matching[/yellow] [bold]{match!r}[/bold]")
+        return
+
+    console.print(video_table(
+        rows,
+        title=f'Videos matching "{match}" — {len(rows)} result(s)',
+    ))
+    console.print(f'\nThese will be tagged as series [bold]{series_name!r}[/bold], '
+                  f'ordered by upload date (oldest = part 1).')
+    confirm = console.input("Proceed? [y/N] ").strip().lower()
+    if confirm != "y":
+        console.print("[yellow]Cancelled.[/yellow]")
+        return
+
+    db.tag_series(series_name, [row["id"] for row in rows])
+    console.print(f"[green]Tagged {len(rows)} video(s) as series[/green] [bold]{series_name!r}[/bold].")
+
+
 def cmd_info(video_ref: str):
     db.init_db()
     # Accept full URL or bare video ID
@@ -282,6 +305,12 @@ def main():
     p_series.add_argument("name", nargs="?", default=None,
                           help="Series name to show all parts (omit to list all series)")
 
+    p_tag = sub.add_parser("tag-series", help="Manually tag videos as a series by title match")
+    p_tag.add_argument("series_name", help="Name to assign to the series")
+    p_tag.add_argument("--match", required=True, help="Title substring to match")
+    p_tag.add_argument("--channel", default=None, metavar="CHANNEL_ID",
+                       help="Restrict search to a specific channel ID")
+
     args = parser.parse_args()
 
     if args.command == "add":
@@ -298,6 +327,8 @@ def main():
         cmd_info(args.video_ref)
     elif args.command == "series":
         cmd_series(args.name)
+    elif args.command == "tag-series":
+        cmd_tag_series(args.series_name, args.match, channel_id=args.channel)
 
 
 if __name__ == "__main__":
