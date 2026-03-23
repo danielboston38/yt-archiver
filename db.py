@@ -39,7 +39,6 @@ def init_db():
 
             CREATE VIRTUAL TABLE IF NOT EXISTS videos_fts
                 USING fts5(
-                    video_id UNINDEXED,
                     title,
                     description,
                     tags,
@@ -48,15 +47,15 @@ def init_db():
                 );
 
             CREATE TRIGGER IF NOT EXISTS videos_ai AFTER INSERT ON videos BEGIN
-                INSERT INTO videos_fts(rowid, video_id, title, description, tags)
-                VALUES (new.rowid, new.id, new.title, new.description, new.tags);
+                INSERT INTO videos_fts(rowid, title, description, tags)
+                VALUES (new.rowid, new.title, new.description, new.tags);
             END;
 
             CREATE TRIGGER IF NOT EXISTS videos_au AFTER UPDATE ON videos BEGIN
-                INSERT INTO videos_fts(videos_fts, rowid, video_id, title, description, tags)
-                VALUES ('delete', old.rowid, old.id, old.title, old.description, old.tags);
-                INSERT INTO videos_fts(rowid, video_id, title, description, tags)
-                VALUES (new.rowid, new.id, new.title, new.description, new.tags);
+                INSERT INTO videos_fts(videos_fts, rowid, title, description, tags)
+                VALUES ('delete', old.rowid, old.title, old.description, old.tags);
+                INSERT INTO videos_fts(rowid, title, description, tags)
+                VALUES (new.rowid, new.title, new.description, new.tags);
             END;
         """)
 
@@ -137,7 +136,7 @@ def search_videos(query: str, channel_id: str = None, limit: int = 20):
             rows = conn.execute("""
                 SELECT v.*, rank
                 FROM videos_fts
-                JOIN videos v ON v.id = videos_fts.video_id
+                JOIN videos v ON v.rowid = videos_fts.rowid
                 WHERE videos_fts MATCH ? AND v.channel_id = ?
                 ORDER BY rank
                 LIMIT ?
@@ -146,7 +145,7 @@ def search_videos(query: str, channel_id: str = None, limit: int = 20):
             rows = conn.execute("""
                 SELECT v.*, rank
                 FROM videos_fts
-                JOIN videos v ON v.id = videos_fts.video_id
+                JOIN videos v ON v.rowid = videos_fts.rowid
                 WHERE videos_fts MATCH ?
                 ORDER BY rank
                 LIMIT ?
