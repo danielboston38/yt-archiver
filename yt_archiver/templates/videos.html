@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }} — yt-archiver{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{{ page_title }}</h1>
+  <p class="meta">{{ total }} total &mdash; showing {{ offset + 1 }}–{{ offset + videos|length }}</p>
+</div>
+
+<div class="sort-bar">
+  <span>Sort by:</span>
+  {% set base = ('/channels/' + channel_id) if channel_id else '/videos' %}
+  {% for field, label in [('upload_date','Date'),('view_count','Views'),('title','Title'),('duration','Duration')] %}
+    <a href="{{ base }}?sort={{ field }}&limit={{ limit }}&offset=0"
+       class="{{ 'active' if sort == field else '' }}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Title</th>
+        <th>Duration</th>
+        <th>Views</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for v in videos %}
+      <tr>
+        <td class="date">{{ v.upload_date or '—' }}</td>
+        <td><a href="/video/{{ v.id }}">{{ v.title }}</a></td>
+        <td class="num">{{ v.duration|duration }}</td>
+        <td class="num">{{ v.view_count|count }}</td>
+        <td><a href="{{ v.url }}" target="_blank" rel="noopener" class="watch-link">Watch ↗</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="pagination">
+  {% if offset > 0 %}
+    <a href="{{ base }}?sort={{ sort }}&limit={{ limit }}&offset={{ [offset - limit, 0]|max }}" role="button" class="secondary">← Previous</a>
+  {% endif %}
+  {% if offset + videos|length < total %}
+    <a href="{{ base }}?sort={{ sort }}&limit={{ limit }}&offset={{ offset + limit }}" role="button">Next →</a>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}{% if series_name %}{{ series_name }}{% else %}Series{% endif %} — yt-archiver{% endblock %}
+
+{% block content %}
+{% if series_name %}
+  <h1>{{ series_name }}</h1>
+  <p class="meta">{{ videos|length }} part{{ 's' if videos|length != 1 else '' }}</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Part</th><th>Title</th><th>Duration</th><th>Date</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for v in videos %}
+        <tr>
+          <td>{{ v.series_part }}</td>
+          <td><a href="/video/{{ v.id }}">{{ v.title }}</a></td>
+          <td class="num">{{ v.duration|duration }}</td>
+          <td class="date">{{ v.upload_date or '—' }}</td>
+          <td><a href="{{ v.url }}" target="_blank" rel="noopener" class="watch-link">Watch ↗</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <p><a href="/series">← All series</a></p>
+
+{% else %}
+  <h1>Multi-part Series</h1>
+
+  {% if not series_list %}
+    <p>No multi-part series detected yet. Series are auto-detected from titles containing "Part N".</p>
+  {% else %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Series</th><th>Parts</th><th>First Upload</th></tr>
+        </thead>
+        <tbody>
+          {% for s in series_list %}
+          <tr>
+            <td><a href="/series/{{ s.series_name|urlencode }}">{{ s.series_name }}</a></td>
+            <td class="num">
+              {% if s.first_part == s.last_part %}
+                {{ s.part_count }}
+              {% else %}
+                {{ s.part_count }} (pt {{ s.first_part }}–{{ s.last_part }})
+              {% endif %}
+            </td>
+            <td class="date">{{ s.first_date or '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+{% endif %}
+{% endblock %}

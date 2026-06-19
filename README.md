@@ -1,6 +1,6 @@
 # yt-archiver
 
-A command-line tool that fetches and archives video metadata from YouTube channels into a local searchable database. Find any episode by keyword, title, or date — then just click the link and watch it on YouTube.
+A tool that fetches and archives video metadata from YouTube channels into a local searchable database. Find any episode by keyword, title, or date — then click the link and watch it on YouTube. Includes a local web UI for browsing and searching in your browser.
 
 ## Features
 
@@ -8,22 +8,31 @@ A command-line tool that fetches and archives video metadata from YouTube channe
 - Full-text search across titles and descriptions
 - Fast incremental syncing — only fetches new videos on subsequent runs
 - Automatic detection of multi-part series (e.g. "Restoration Part 1", "Part 2", …)
+- Local web UI with live search (`yt-archiver serve`)
 - No API key required
 - Stores everything locally in a SQLite database
 
 ## Requirements
 
 - Python 3.10+
-- pip
+- pip or pipx
 
 ## Installation
+
+### From source (recommended while in development)
 
 ```bash
 git clone https://github.com/danielboston38/yt-archiver.git
 cd yt-archiver
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+pip install -e .
+```
+
+This installs `yt-archiver` as a real command on your system — no more `python main.py`.
+
+### With pipx (isolated install, no venv management)
+
+```bash
+pipx install git+https://github.com/danielboston38/yt-archiver.git
 ```
 
 ## Usage
@@ -31,26 +40,37 @@ pip install -r requirements.txt
 ### Add a channel and fetch all metadata
 
 ```bash
-python main.py add "https://www.youtube.com/@adriansdigitalbasement"
+yt-archiver add "https://www.youtube.com/@adriansdigitalbasement"
 ```
 
-This does the initial fetch of all videos on the channel. It may take a few minutes depending on the size of the channel.
+This does the initial fetch of all videos on the channel. It may take a few minutes depending on channel size.
 
-### Search for videos
+### Start the web UI
 
 ```bash
-python main.py search "mac classic"
-python main.py search "IBM AT repair"
-python main.py search "6502"
+yt-archiver serve
 ```
+
+Opens a local web server at `http://127.0.0.1:8000`. Browse channels, search videos, explore series — all in your browser. Use `--open` to auto-open the browser, or `--port` to change the port.
+
+### Search for videos (CLI)
+
+```bash
+yt-archiver search "mac classic"
+yt-archiver search "IBM AT repair"
+yt-archiver search 2022
+yt-archiver search "6502" 2021
+```
+
+A bare 4-digit year filters by upload date. Combine with a keyword to narrow by both.
 
 ### List recent videos
 
 ```bash
-python main.py list
-python main.py list --sort view_count
-python main.py list --sort title
-python main.py list --limit 100 --offset 50
+yt-archiver list
+yt-archiver list --sort view_count
+yt-archiver list --sort title
+yt-archiver list --limit 100 --offset 50
 ```
 
 Available sort options: `upload_date`, `view_count`, `title`, `duration`
@@ -58,45 +78,53 @@ Available sort options: `upload_date`, `view_count`, `title`, `duration`
 ### Show full details for a video
 
 ```bash
-python main.py info <video_id>
-python main.py info "https://www.youtube.com/watch?v=<video_id>"
+yt-archiver info <video_id>
+yt-archiver info "https://www.youtube.com/watch?v=<video_id>"
 ```
-
-Displays the full title, description, tags, duration, views, and URL.
 
 ### Sync new videos
 
 ```bash
 # Sync all archived channels
-python main.py sync
+yt-archiver sync
 
 # Sync a specific channel
-python main.py sync "https://www.youtube.com/@adriansdigitalbasement"
+yt-archiver sync "https://www.youtube.com/@adriansdigitalbasement"
 ```
-
-Run this periodically to pick up new uploads without re-fetching everything.
 
 ### Show all archived channels
 
 ```bash
-python main.py channels
+yt-archiver channels
 ```
 
 ### Browse multi-part series
 
 ```bash
 # List all detected series
-python main.py series
+yt-archiver series
 
 # Show all parts of a specific series
-python main.py series "Mac IIci Restoration"
+yt-archiver series "Mac IIci Restoration"
 ```
 
-Series are detected automatically from video titles using the pattern `Part N` (e.g. "Part 1", "Part 2"). This detection is tuned for channels like Adrian's Digital Basement that consistently use this naming convention. If you archive a channel that uses different conventions (e.g. "Ep. 1", "#1", "Episode 1"), you'll need to extend the `_SERIES_RE` regex in `db.py` to match that channel's pattern.
+Series are detected automatically from video titles using the pattern `Part N` (e.g. "Part 1", "Part 2"). If a channel uses different conventions (e.g. "Ep. 1", "#1"), extend `_SERIES_RE` in `yt_archiver/db.py`.
+
+### Manually tag a series
+
+```bash
+yt-archiver tag-series "Plexus P20" --match "plexus p20"
+```
+
+Finds videos whose titles contain the match text and tags them as a series, ordered by upload date.
 
 ## Data
 
-All data is stored in `archive.db` (SQLite) in the project directory. The database is excluded from version control via `.gitignore`. To start fresh, simply delete `archive.db`.
+The database is stored at `~/.local/share/yt-archiver/archive.db` by default. If an `archive.db` exists in the current directory it will be used instead (backwards compatibility). Override with the `YT_ARCHIVER_DB` environment variable:
+
+```bash
+YT_ARCHIVER_DB=/my/custom/path/archive.db yt-archiver serve
+```
 
 ## License
 
