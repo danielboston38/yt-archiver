@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Search — yt-archiver{% endblock %}
+
+{% block content %}
+<h1>Search</h1>
+
+<div id="result-count" class="meta">
+  {% if query or year %}
+    {{ videos|length }} result{{ 's' if videos|length != 1 else '' }}
+    for <strong>{% if query %}"{{ query }}"{% endif %}{% if year %} {{ year }}{% endif %}</strong>
+  {% else %}
+    Enter a query above to search.
+  {% endif %}
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Title</th>
+        <th>Duration</th>
+        <th>Views</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="search-results">
+      {% for v in videos %}
+      <tr>
+        <td class="date">{{ v.upload_date or '—' }}</td>
+        <td><a href="/video/{{ v.id }}">{{ v.title }}</a></td>
+        <td class="num">{{ v.duration|duration }}</td>
+        <td class="num">{{ v.view_count|count }}</td>
+        <td><a href="{{ v.url }}" target="_blank" rel="noopener" class="watch-link">Watch ↗</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Live search: update results as user types in the global search bar
+const input = document.getElementById('global-q');
+const tbody  = document.getElementById('search-results');
+const count  = document.getElementById('result-count');
+let timer;
+
+if (input && tbody) {
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    const q = input.value.trim();
+    if (q.length < 2) return;
+    timer = setTimeout(async () => {
+      try {
+        const r = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=50`);
+        const videos = await r.json();
+        tbody.innerHTML = videos.map(v => `
+          <tr>
+            <td class="date">${v.upload_date || '—'}</td>
+            <td><a href="/video/${v.id}">${esc(v.title)}</a></td>
+            <td class="num">${fmtDur(v.duration)}</td>
+            <td class="num">${fmtNum(v.view_count)}</td>
+            <td><a href="${v.url}" target="_blank" rel="noopener" class="watch-link">Watch ↗</a></td>
+          </tr>`).join('');
+        count.innerHTML = `${videos.length} result${videos.length !== 1 ? 's' : ''} for <strong>"${esc(q)}"</strong>`;
+      } catch(e) { console.error(e); }
+    }, 250);
+  });
+}
+
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtDur(s) {
+  if (!s) return '—';
+  const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60;
+  return h ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
+}
+function fmtNum(n) {
+  if (!n) return '—';
+  if (n>=1e6) return `${(n/1e6).toFixed(1)}M`;
+  if (n>=1e3) return `${(n/1e3).toFixed(1)}K`;
+  return String(n);
+}
+function pad(n) { return String(n).padStart(2,'0'); }
+</script>
+{% endblock %}

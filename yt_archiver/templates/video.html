@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}{{ video.title }} — yt-archiver{% endblock %}
+
+{% block content %}
+<div class="video-detail">
+  <div class="video-thumb">
+    <a href="{{ video.url }}" target="_blank" rel="noopener">
+      <img src="{{ video.thumbnail or 'https://i.ytimg.com/vi/' + video.id + '/mqdefault.jpg' }}"
+           alt="{{ video.title }}" loading="lazy">
+    </a>
+  </div>
+
+  <div class="video-meta">
+    <h1>{{ video.title }}</h1>
+
+    <div class="meta-grid">
+      <span>Date</span>      <span>{{ video.upload_date or '—' }}</span>
+      <span>Duration</span>  <span>{{ video.duration|duration }}</span>
+      <span>Views</span>     <span>{{ video.view_count|count }}</span>
+      <span>Likes</span>     <span>{{ video.like_count|count }}</span>
+      {% if video.series_name %}
+      <span>Series</span>
+      <span><a href="/series/{{ video.series_name|urlencode }}">{{ video.series_name }}</a>
+            &mdash; Part {{ video.series_part }}</span>
+      {% endif %}
+    </div>
+
+    <div class="video-actions">
+      <a href="{{ video.url }}" target="_blank" rel="noopener" role="button">Watch on YouTube ↗</a>
+    </div>
+
+    {% if video.tags %}
+    <div class="tags">
+      {% for tag in video.tags %}
+        <span class="tag">{{ tag }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if video.description %}
+<details open>
+  <summary>Description</summary>
+  <pre class="description">{{ video.description }}</pre>
+</details>
+{% endif %}
+
+{% if series_videos %}
+<section class="series-section">
+  <h2>All parts of "{{ video.series_name }}"</h2>
+  <table>
+    <thead>
+      <tr><th>Part</th><th>Title</th><th>Duration</th><th>Date</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for v in series_videos %}
+      <tr class="{{ 'current-part' if v.id == video.id else '' }}">
+        <td>{{ v.series_part }}</td>
+        <td><a href="/video/{{ v.id }}">{{ v.title }}</a></td>
+        <td class="num">{{ v.duration|duration }}</td>
+        <td class="date">{{ v.upload_date or '—' }}</td>
+        <td><a href="{{ v.url }}" target="_blank" rel="noopener" class="watch-link">Watch ↗</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+{% endblock %}

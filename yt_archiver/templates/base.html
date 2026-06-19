@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}yt-archiver{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <ul>
+        <li><a href="/" class="brand">yt-archiver</a></li>
+      </ul>
+      <ul>
+        <li><a href="/">Channels</a></li>
+        <li><a href="/videos">All Videos</a></li>
+        <li><a href="/series">Series</a></li>
+      </ul>
+    </nav>
+    <div class="search-bar">
+      <form action="/search" method="get" role="search">
+        <input type="search" name="q" id="global-q"
+               placeholder="Search videos, titles, descriptions…"
+               value="{{ query|default('') }}"
+               autocomplete="off">
+        <input type="text" name="year" placeholder="Year" value="{{ year|default('') }}" style="max-width:6rem">
+        <button type="submit">Search</button>
+      </form>
+    </div>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <small>yt-archiver &mdash; local YouTube metadata archive</small>
+  </footer>
+
+  <script src="/static/search.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

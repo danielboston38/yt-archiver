@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Channels — yt-archiver{% endblock %}
+
+{% block content %}
+<h1>Archived Channels</h1>
+
+{% if not channels %}
+  <p>No channels archived yet. Run <code>yt-archiver add &lt;channel_url&gt;</code> to get started.</p>
+{% else %}
+  <div class="channel-grid">
+    {% for ch in channels %}
+    <article class="channel-card">
+      <hgroup>
+        <h3><a href="/channels/{{ ch.id }}">{{ ch.name }}</a></h3>
+        <p>{{ ch.video_count }} video{{ 's' if ch.video_count != 1 else '' }}</p>
+      </hgroup>
+      <p class="meta">Last synced: {{ ch.last_synced }}</p>
+      <footer>
+        <a href="/channels/{{ ch.id }}" role="button">Browse</a>
+        <a href="/search?q=&year=" class="secondary" role="button" style="margin-left:.5rem">Search</a>
+      </footer>
+    </article>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}
