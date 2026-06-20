@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Channels — yt-archiver{% endblock %}
+{% block title %}Channels — tubevault{% endblock %}
 
 {% block content %}
 <h1>Archived Channels</h1>
 
 {% if not channels %}
-  <p>No channels archived yet. Run <code>yt-archiver add &lt;channel_url&gt;</code> to get started.</p>
+  <p>No channels archived yet. Run <code>tubevault add &lt;channel_url&gt;</code> to get started.</p>
 {% else %}
   <div class="channel-grid">
     {% for ch in channels %}

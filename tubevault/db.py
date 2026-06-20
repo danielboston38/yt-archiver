@@ -17,20 +17,25 @@ def _detect_series(title: str):
 
 
 def _get_db_path() -> Path:
-    if env := os.environ.get("YT_ARCHIVER_DB"):
+    if env := os.environ.get("TUBEVAULT_DB") or os.environ.get("YT_ARCHIVER_DB"):
         return Path(env)
     # backwards compat: use local archive.db if it already exists
     local = Path.cwd() / "archive.db"
     if local.exists():
         return local
-    # new installs: store in user data directory
+    # migrate from old yt-archiver data dir if it exists
     try:
         from platformdirs import user_data_dir
-        d = Path(user_data_dir("yt-archiver"))
+        old_dir = Path(user_data_dir("yt-archiver"))
+        new_dir = Path(user_data_dir("tubevault"))
     except ImportError:
-        d = Path.home() / ".local" / "share" / "yt-archiver"
-    d.mkdir(parents=True, exist_ok=True)
-    return d / "archive.db"
+        old_dir = Path.home() / ".local" / "share" / "yt-archiver"
+        new_dir = Path.home() / ".local" / "share" / "tubevault"
+    old_db = old_dir / "archive.db"
+    if old_db.exists() and not (new_dir / "archive.db").exists():
+        return old_db
+    new_dir.mkdir(parents=True, exist_ok=True)
+    return new_dir / "archive.db"
 
 
 DB_PATH = _get_db_path()

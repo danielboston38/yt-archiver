@@ -3,11 +3,24 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "yt-archiver"
+name = "tubevault"
 version = "0.2.0"
 description = "Archive and search YouTube channel metadata locally, with a web UI"
 readme = "README.md"
 license = {file = "LICENSE"}
+authors = [
+    {name = "Mark", email = "mark@dymek.me"},
+]
+keywords = ["youtube", "archive", "search", "metadata", "yt-dlp"]
+classifiers = [
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Video",
+    "Environment :: Console",
+]
 requires-python = ">=3.10"
 dependencies = [
     "yt-dlp>=2024.1.0",
@@ -24,14 +37,14 @@ Homepage = "https://github.com/danielboston38/yt-archiver"
 Repository = "https://github.com/danielboston38/yt-archiver"
 
 [project.scripts]
-yt-archiver = "yt_archiver.cli:main"
+tubevault = "tubevault.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["yt_archiver*"]
+include = ["tubevault*"]
 
 [tool.setuptools.package-data]
-yt_archiver = [
+tubevault = [
     "templates/*.html",
     "static/*.css",
     "static/*.js",
