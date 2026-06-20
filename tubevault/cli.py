@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-yt-archiver — YouTube channel metadata archiver & search tool.
+tubevault — YouTube channel metadata archiver & search tool.
 
 Usage:
-  yt-archiver add <channel_url>       Add a channel and do initial fetch
-  yt-archiver sync [channel_url]      Sync new videos (all channels if no URL given)
-  yt-archiver search <query>          Full-text search across all archived channels
-  yt-archiver list [--sort <field>]   List videos (most recent first)
-  yt-archiver channels                Show all archived channels
-  yt-archiver info <video_id_or_url>  Show full details for a single video
-  yt-archiver series                  List detected multi-part series
-  yt-archiver series <name>           Show all parts of a specific series
-  yt-archiver tag-series <name> --match <text>  Manually tag videos as a series
-  yt-archiver serve [--port 8000]     Start local web UI
+  tubevault add <channel_url>       Add a channel and do initial fetch
+  tubevault sync [channel_url]      Sync new videos (all channels if no URL given)
+  tubevault search <query>          Full-text search across all archived channels
+  tubevault list [--sort <field>]   List videos (most recent first)
+  tubevault channels                Show all archived channels
+  tubevault info <video_id_or_url>  Show full details for a single video
+  tubevault series                  List detected multi-part series
+  tubevault series <name>           Show all parts of a specific series
+  tubevault tag-series <name> --match <text>  Manually tag videos as a series
+  tubevault serve [--port 8000]     Start local web UI
 """
 
 import argparse
@@ -25,7 +25,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskPr
 from rich.panel import Panel
 from rich.text import Text
 
-from yt_archiver import db, fetcher
+from tubevault import db, fetcher
 
 console = Console()
 
@@ -128,7 +128,7 @@ def _sync_channel(channel_id: str, channel_url: str):
 
         def on_progress(fetched, total):
             progress.update(task, total=total, completed=fetched,
-                            description=f"Processing {fetched}/{total} videos…")
+                            description=f"Scanning {fetched}/{total} ({new_count} new)…")
 
         for video in fetcher.fetch_all_videos(
             channel_url, channel_id, existing_ids=existing,
@@ -295,14 +295,14 @@ def cmd_serve(host: str = "127.0.0.1", port: int = 8000, open_browser: bool = Fa
         sys.exit(1)
 
     db.init_db()
-    console.print(f"[bold green]yt-archiver web UI[/bold green] — http://{host}:{port}")
+    console.print(f"[bold green]tubevault web UI[/bold green] — http://{host}:{port}")
     console.print("[dim]Press Ctrl+C to stop.[/dim]")
 
     if open_browser:
         import threading, webbrowser
         threading.Timer(1.0, lambda: webbrowser.open(f"http://{host}:{port}")).start()
 
-    from yt_archiver.server import app
+    from tubevault.server import app
     uvicorn.run(app, host=host, port=port, log_level="warning")
 
 

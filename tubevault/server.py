@@ -6,11 +6,11 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from yt_archiver import db
+from tubevault import db
 
 _BASE = Path(__file__).parent
 
-app = FastAPI(title="yt-archiver")
+app = FastAPI(title="tubevault")
 app.mount("/static", StaticFiles(directory=_BASE / "static"), name="static")
 templates = Jinja2Templates(directory=_BASE / "templates")
 
