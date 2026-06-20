@@ -50,8 +50,7 @@ async def channels_page(request: Request):
             "last_synced": (ch["last_synced"] or "")[:10] or "never",
             "video_count": db.get_video_count(ch["id"]),
         })
-    return templates.TemplateResponse("channels.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "channels.html", {
         "channels": channels,
     })
 
@@ -67,8 +66,7 @@ async def channel_videos(
         return HTMLResponse("Channel not found", status_code=404)
     rows = db.list_videos(channel_id=channel_id, sort=sort, limit=limit, offset=offset)
     total = db.get_video_count(channel_id)
-    return templates.TemplateResponse("videos.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "videos.html", {
         "page_title": channel["name"],
         "videos": [dict(r) for r in rows],
         "total": total,
@@ -88,8 +86,7 @@ async def all_videos(
     db.init_db()
     rows = db.list_videos(sort=sort, limit=limit, offset=offset)
     total = db.get_video_count()
-    return templates.TemplateResponse("videos.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "videos.html", {
         "page_title": "All Videos",
         "videos": [dict(r) for r in rows],
         "total": total,
@@ -113,8 +110,7 @@ async def video_detail(request: Request, video_id: str):
     series_videos = []
     if video.get("series_name"):
         series_videos = [dict(r) for r in db.get_series_videos(video["series_name"])]
-    return templates.TemplateResponse("video.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "video.html", {
         "video": video,
         "series_videos": series_videos,
         "query": "",
@@ -130,8 +126,7 @@ async def search_page(request: Request, q: str = "", year: str = ""):
     if query or year_filter:
         rows = db.search_videos(query=query, year=year_filter, limit=50)
         videos = [dict(r) for r in rows]
-    return templates.TemplateResponse("search.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "search.html", {
         "query": q,
         "year": year,
         "videos": videos,
@@ -153,8 +148,7 @@ async def api_search(q: str = "", year: str = "", limit: int = 30):
 async def series_list(request: Request):
     db.init_db()
     series = [dict(s) for s in db.get_series()]
-    return templates.TemplateResponse("series.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "series.html", {
         "series_list": series,
         "series_name": None,
         "videos": [],
@@ -166,8 +160,7 @@ async def series_list(request: Request):
 async def series_detail(request: Request, series_name: str):
     db.init_db()
     videos = [dict(v) for v in db.get_series_videos(series_name)]
-    return templates.TemplateResponse("series.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "series.html", {
         "series_list": [],
         "series_name": series_name,
         "videos": videos,
